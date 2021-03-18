@@ -2,18 +2,21 @@ import java.util.ArrayList;
 
 public class Algoritmo {
 
-	static int tamPoblacion = 6;
+	static int tamPoblacion = 10;
 	static int numGenes = 4;
 	static int minimos[] = new int[] { 1, 1, 1, 1 };
-	static int maximos[] = new int[] { 156, 1576, 1476, 5976 };
+	static int maximos[] = new int[] { 9, 9, 9, 9 };
 	static double porMutacion = 0.1;
 	static int totalIteracciones = 5;
 	static int elitismo = 1;
 
+	static int solucionMasterMind[] = new int [] {7,4,4,4};
+	
+	
 	static boolean verCruzar = false;
 	static boolean verMutar = false;
-	static boolean verEvaluar = false;
-	static boolean verSeleccionar = true;
+	static boolean verEvaluar = true;
+	static boolean verSeleccionar = false;
 	static boolean verPoblacionInicial = false;
 	static boolean mutacionGen = false;
 
@@ -21,8 +24,15 @@ public class Algoritmo {
 	static ArrayList<Integer> mejores = new ArrayList<Integer>();
 	static ArrayList<Float> medias = new ArrayList<Float>();
 
-	@SuppressWarnings("unused")
 	public static void main(String[] args) {
+		//algoritmoNormal();
+		algoritmoMasterMind();
+
+	}
+
+
+
+	private static void algoritmoNormal() {
 		int poblacion[][];
 		poblacion = new int[tamPoblacion][numGenes + 1];
 		
@@ -45,9 +55,34 @@ public class Algoritmo {
 		System.out.println("El mejor es:");
 		imprimeCromosoma(mejor, true);
 		Ventana ventana = new Ventana(mejores, medias);
-
 	}
 
+	private static void algoritmoMasterMind() {
+		int poblacion[][];
+		poblacion = new int[tamPoblacion][numGenes + 1];
+		
+		crearPoblacionInicial(poblacion);
+		evaluarMasterMind(poblacion);
+		int numIteracciones = 0;
+
+		while (mejor[numGenes] != 14) {
+		//while(numIteracciones<10) {
+			seleccion(poblacion);
+			cruzar(poblacion);
+			if (mutacionGen)
+				mutacionGen(poblacion);
+			else
+				mutacionCromosoma(poblacion);
+			evaluarMasterMind(poblacion);
+			numIteracciones++;
+		}
+		System.out.println("El mejor es:");
+		imprimeCromosoma(mejor, true);
+		System.out.println("Se ha obtnenido en: "+ numIteracciones);
+		Ventana ventana = new Ventana(mejores, medias);
+		
+	}
+	
 	private static void crearPoblacionInicial(int[][] poblacion) {
 		for (int i = 0; i < poblacion.length; i++) {
 			for (int j = 0; j < (poblacion[i].length) - 1; j++) {
@@ -199,22 +234,49 @@ public class Algoritmo {
 			obtenerAptitudMasterMind(poblacion[i]);
 			media += poblacion[i][numGenes];
 		}
+		if (verEvaluar) {
+			System.out.println("-------------Evaluacion--------------");
+			imprimirPoblacion(poblacion);
+		}
 		mejorPoblacion = obtnerMejor(poblacion);
 		if (mejor[numGenes] < mejorPoblacion[numGenes])
 			mejor = mejorPoblacion.clone();
 		media = media / (float) poblacion.length;
 		mejores.add(mejorPoblacion[numGenes]);
 		medias.add(media);
-		if (verEvaluar) {
-			System.out.println("-------------Evaluacion--------------");
-			imprimirPoblacion(poblacion);
-		}
+		
 
 	}
 	
 	private static void obtenerAptitudMasterMind(int[] cromosoma) {
-		
-		
+		int negras = 0;
+		int blancas = 0;
+		int aptitud = 0;
+		int[] croAux = cromosoma.clone();
+		int [] solAux = solucionMasterMind.clone();
+		for (int i = 0; i < solAux.length; i++) {
+			if(croAux[i] == solAux[i]) {
+				negras++;
+				croAux[i] = -1;
+				solAux[i] = -1;
+			}
+		}
+		for (int i = 0; i < croAux.length-1; i++) {
+			for (int j = 0; j < solAux.length; j++) {
+				if(croAux[i] != -1 && solAux[j] != -1) {
+					if(croAux[i] == solAux[j]) {
+						blancas++;
+						croAux[i] = -1;
+						solAux[j] = -1;
+					}
+				}
+			}
+		}
+		for (int i = 1; i <= (blancas+negras-1); i++) {
+			aptitud+= i;
+		}
+		aptitud += 2*negras+blancas;
+		cromosoma[numGenes] = aptitud;
 	}
 	
 	private static void imprimeCromosoma(int[] m, boolean evaluacion) {
